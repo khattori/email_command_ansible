@@ -1,0 +1,12 @@
+---
+- name: 新着メールをチェックする
+  recv_email:
+    server: "{{ imap_server }}"
+    username: "{{ imap_username }}"
+    password: "{{ imap_password }}"
+    mailbox: "{{ imap_mailbox|default(omit) }}"
+    ssl: "{{ imap_ssl|default(omit) }}"
+    port: "{{ imap_port|default(omit) }}"
+  delegate_to: localhost
+  register: recvd_mail
+  notify: メール件名をチェックする

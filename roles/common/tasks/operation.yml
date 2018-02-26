@@ -1,0 +1,51 @@
+---
+- set_fact:
+    target_host: "{{ recvd_mail.mail.subject | regex_replace(subject_pattern, '\\1') }}"
+    all_hosts: "{{ groups.all }}"
+    commands: "{{ recvd_mail.mail.body.splitlines() | map('trim') | select() | list }}"
+- block:
+    - name: 対象サーバー上でコマンド実行する
+      command: "{{ item }}"
+      with_items: "{{ commands }}"
+      register: command_results
+      delegate_to: "{{ target_host }}"
+      changed_when: False
+      ignore_errors: True
+    - set_fact:
+        mail_subject: コマンド実行結果@{{ target_host }}
+        mail_body: |
+          {% for result in command_results.results %}
+          ----
+          コマンド: {{ result.item }}
+          {% if result.failed %}
+          実行失敗: {{ result.msg }}
+          {{ result.stderr|default('') }}
+          {% else %}
+          実行結果:
+          {{ result.stdout }}
+          {% endif %}
+          {% endfor %}
+      when: command_results.results is defined
+    - set_fact:
+        mail_subject: コマンド実行失敗@{{ target_host }}
+        mail_body: |
+          コマンド実行に失敗しました:
+          {{ command_results.msg }}
+      when: command_results.results is not defined
+  when: target_host in all_hosts and commands
+- set_fact:
+    mail_subject: ホスト未登録@{{ target_host }}
+    mail_body: |
+      ホスト {{ target_host }} は、インベントリに登録されていません。
+  when: target_host not in all_hosts
+- name: メールを送信する
+  mail:
+    host: localhost
+    port: 25
+    subject: "{{ mail_subject }}"
+    to: "{{ recvd_mail.mail.from }}"
+    from: ansible@ansible.fixpoint.co.jp
+    body: "{{ mail_body }}"
+    charset: utf-8
+  delegate_to: localhost
+- include_tasks: main.yml

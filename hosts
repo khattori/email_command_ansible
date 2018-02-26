@@ -1,0 +1,6 @@
+[test-servers]
+test.example.com
+
+[test-servers:vars]
+ansible_ssh_user=testuser
+ansible_ssh_pass=testpass

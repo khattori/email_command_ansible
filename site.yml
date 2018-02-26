@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  vars:
+    subject_pattern: "コマンド実行@(\\w+)"
+  vars_files:
+    - imap_conf.yml
+  roles:
+    - common
+
+    

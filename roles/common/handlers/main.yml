@@ -1,0 +1,14 @@
+---
+- name: メール件名をチェックする
+  set_fact:
+    is_command_mail: "{{ recvd_mail.mail.subject | regex_search(subject_pattern) }}"
+  changed_when: True
+  notify:
+    - オペレーションを実行する
+    - 次のメールをチェック
+- name: 次のメールをチェック
+  include_tasks: main.yml
+  when: is_command_mail == ""
+- name: オペレーションを実行する
+  include_tasks: operation.yml
+  when: is_command_mail != ""

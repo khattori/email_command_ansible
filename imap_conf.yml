@@ -1,0 +1,4 @@
+---
+imap_server: <IMAPサーバ>
+imap_username: <IMAPユーザー名>
+imap_password: <IMAPパスワード>
